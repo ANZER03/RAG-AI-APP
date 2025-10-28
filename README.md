@@ -342,5 +342,4 @@ For support, please contact the development team or create an issue in the GitHu
 
 **Repository**: [RAG-AI-APP](https://github.com/ANZER03/RAG-AI-APP)
 **Version**: 1.3.0
-**Last Updated**: October 28, 2025</content>
-<parameter name="filePath">c:\Users\UTENTE\Desktop\Projects\Front-Back-RAG-Chat-App\README.md
+**Last Updated**: October 28, 2025
