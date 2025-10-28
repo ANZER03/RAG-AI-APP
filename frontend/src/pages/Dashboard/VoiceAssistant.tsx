@@ -5,30 +5,28 @@ import {
   faMicrophone,
   faMicrophoneSlash,
 } from '@fortawesome/free-solid-svg-icons';
-import { motion } from 'framer-motion';
 import { BsFileEarmarkArrowUp, BsPlayFill } from 'react-icons/bs';
 import DefaultLayout from '../../layout/DefaultLayout';
-import { useLocation } from 'react-router-dom';
 import { UserContext } from '../../components/UserContext';
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || '';
-const OPENAI_API_URL = 'https://api.openai.com/v1/audio/speech';
-
-interface Message {
-  role: 'user' | 'model';
-  text: string;
+// Extend Window interface for Speech Recognition
+interface IWindow extends Window {
+  SpeechRecognition: any;
+  webkitSpeechRecognition: any;
 }
 
+declare const window: IWindow;
+
+const OPENAI_API_KEY = (import.meta as any).env?.VITE_OPENAI_API_KEY || '';
+const OPENAI_API_URL = 'https://api.openai.com/v1/audio/speech';
+
 const Chat: React.FC = () => {
-  const location = useLocation();
   const [userInput, setUserInput] = useState<string>('');
-  const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [isListening, setIsListening] = useState<boolean>(false);
   const [speechRecognizer, setSpeechRecognizer] =
-    useState<SpeechRecognition | null>(null);
+    useState<any | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('alloy');
   const [loading, setLoading] = useState<boolean>(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const cancelTokenSource = useRef<CancelTokenSource | null>(null);
   const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
 
@@ -57,7 +55,7 @@ const Chat: React.FC = () => {
     }
   }, []);
 
-  const handleSpeechResult = (event: SpeechRecognitionResult) => {
+  const handleSpeechResult = (event: any) => {
     let interimTranscripts = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const transcript = event.results[i][0].transcript;
@@ -135,22 +133,11 @@ const Chat: React.FC = () => {
         }
       );
 
-      setChatHistory((prevHistory) => [
-        ...prevHistory,
-        { role: 'user', text: input },
-        { role: 'model', text: response.data.text },
-      ]);
-
       await generateSpeech(response.data.text, selectedVoice);
       setLoading(false);
     } catch (error) {
       console.error(error);
       setLoading(false);
-      setChatHistory((prevHistory) => [
-        ...prevHistory,
-        { role: 'user', text: input },
-        { role: 'model', text: 'Oops! Something went wrong. Try again later.' },
-      ]);
     }
   };
 
@@ -169,9 +156,9 @@ const Chat: React.FC = () => {
   const handleFileChange2 = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      setSelectedFiles(Array.from(files));
       const formData = new FormData();
-      Array.from(files).forEach((file) => {
+      const fileArray = Array.from(files) as File[];
+      fileArray.forEach((file: File) => {
         formData.append('pdfFiles', file);
       });
 
@@ -181,10 +168,10 @@ const Chat: React.FC = () => {
           'Authorization': `Bearer ${token}`,
         },
       })
-        .then((response) => {
+        .then((response: any) => {
           console.log(response.data);
         })
-        .catch((error) => {
+        .catch((error: any) => {
           console.error('Erreur lors du téléversement :', error);
         });
     }
@@ -214,10 +201,7 @@ const Chat: React.FC = () => {
           </div>
         )}
         <div className="fixed bg-opacity-40 border border-white-500 bg-slate-600 rounded-lg top-1/2 left-[58vw] transform -translate-x-1/2 -translate-y-1/2">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+          <div
             className="w-full max-w-lg bg-gray-800 p-6 rounded-lg shadow-lg"
           >
             <div className="flex flex-col items-center mb-6">
@@ -267,7 +251,7 @@ const Chat: React.FC = () => {
                 </svg>
                 <select
                   value={selectedVoice}
-                  onChange={(e) => setSelectedVoice(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedVoice(e.target.value)}
                   className="appearance-none relative text-slate-400 bg-transparent ring-0 outline-none border border-white-500 text-neutral-900 text-sm font-bold rounded-lg focus:ring-violet-500 focus:border-violet-500 block w-full p-2.5"
                 >
                   {voices.map((voice) => (
@@ -278,7 +262,7 @@ const Chat: React.FC = () => {
                 </select>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         <div className="w-9/12 bg-gray-100 p-6 rounded-b-lg shadow flex items-center fixed bottom-0">
